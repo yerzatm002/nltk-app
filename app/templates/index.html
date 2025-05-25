@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Казах OCR - Мәтінді өңдеу жүйесі</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <!-- Навигационная панель -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <h1>Казах OCR - Мәтінді өңдеу жүйесі</h1>
+        </div>
+    </nav>
+
+    <!-- Главный контейнер -->
+    <div class="container">
+        <div class="intro-text">
+            <h2>Қазақ тіліндегі мәтінді өңдеу</h2>
+            <p>Бұл жүйе PDF файлдарындағы мәтінді таниды, өңдейді және нәтижені қайтарады.</p>
+        </div>
+
+        <!-- Форма загрузки -->
+        <form id="uploadForm" enctype="multipart/form-data" method="POST" action="/upload">
+            <div class="form-group">
+                <label for="fileInput" class="form-label">PDF файлын таңдаңыз:</label>
+                <input id="fileInput" class="file-input" type="file" name="file" accept=".pdf" required>
+                <button type="submit" id="submitButton" class="submit-button">Өңдеу</button>
+            </div>
+        </form>
+
+        <!-- Анимация обработки -->
+        <div id="processing" class="hidden">
+            <div class="loader"></div>
+            <p>Өңдеу жүріп жатыр, күте тұрыңыз...</p>
+        </div>
+
+        <!-- Ссылка на обработанный файл -->
+        <div id="result" class="hidden">
+            <p>Өңделген файл дайын:</p>
+            <a id="downloadLink" href="#" class="download-link">Жүктеу</a>
+        </div>
+    </div>
+
+    <!-- Футер -->
+    <footer>
+        <p>&copy; 2025 Казах OCR. Барлық құқықтар қорғалған.</p>
+    </footer>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const processing = document.getElementById('processing');
+        const result = document.getElementById('result');
+        const submitButton = document.getElementById('submitButton');
+        const downloadLink = document.getElementById('downloadLink');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault(); // Предотвращаем стандартное поведение формы
+            processing.classList.remove('hidden'); // Показываем анимацию
+            result.classList.add('hidden'); // Скрываем результат, если он был показан ранее
+            submitButton.disabled = true; // Деактивируем кнопку
+
+            const formData = new FormData(form);
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                processing.classList.add('hidden'); // Скрываем анимацию
+                submitButton.disabled = false; // Активируем кнопку
+
+                if (response.ok) {
+                    const { file_url } = await response.json(); // Парсим JSON
+                    downloadLink.href = file_url; // Устанавливаем ссылку
+                    result.classList.remove('hidden'); // Показываем результат
+                } else {
+                    const error = await response.json();
+                    alert(error.error || "Өңдеу кезінде қате пайда болды.");
+                }
+            } catch (err) {
+                processing.classList.add('hidden'); // Скрываем анимацию
+                submitButton.disabled = false; // Активируем кнопку
+                alert("Серверге қосылу қатесі. Қайта көріңіз.");
+            }
+        });
+    </script>
+</body>
+</html>
